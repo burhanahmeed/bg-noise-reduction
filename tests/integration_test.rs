@@ -61,7 +61,8 @@ fn test_noise_reduction_runs() {
     std::fs::write(input_path, test_data).unwrap();
 
     // Run the noise reduction (call process_audio directly)
-    let result = bg_noise_reduction::process_audio(input_path, output_path);
+    let config = bg_noise_reduction::NoiseReductionConfig::default();
+    let result = bg_noise_reduction::process_audio(input_path, output_path, config);
 
     // Verify it completed without error
     assert!(result.is_ok());
