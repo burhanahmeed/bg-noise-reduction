@@ -5,5 +5,5 @@ edition = "2024"
 
 [dependencies]
 hound = "3.5"
-realfft = "3.4"
+rustfft = "6.4"
 num-complex = "0.4"

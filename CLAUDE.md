@@ -6,6 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Audio noise reduction tool that removes background noise from audio files using spectral subtraction techniques.
 
+# Goals
+
+- A background removal library in Rust that can be used to remove background noise from audio files.
+- Published to crates.io
+
 ## Input/Output
 
 - **Input**: WAV format audio files containing background noise
