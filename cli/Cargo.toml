@@ -1,0 +1,16 @@
+[package]
+name = "bg-noise-reduction"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Audio noise reduction CLI tool"
+
+[[bin]]
+name = "bg-noise-reduction"
+path = "src/main.rs"
+
+[dependencies]
+bg-noise-reduction-core = { path = "../core" }
+hound = "3.5"

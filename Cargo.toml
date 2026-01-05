@@ -1,9 +1,14 @@
-[package]
-name = "bg-noise-reduction"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = ["core", "cli", "wasm"]
+resolver = "2"
 
-[dependencies]
-hound = "3.5"
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/yourusername/bg-noise-reduction"
+
+[workspace.dependencies]
 rustfft = "6.4"
 num-complex = "0.4"

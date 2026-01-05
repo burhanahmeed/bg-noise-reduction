@@ -1,16 +1,42 @@
+//! # Audio Noise Reduction Library
+//!
+//! This library provides spectral subtraction-based noise reduction for audio files.
+//!
+//! ## Example
+//!
+//! ```rust,no_run
+//! use bg_noise_reduction::{process_audio, NoiseReductionConfig};
+//! use std::path::Path;
+//!
+//! let config = NoiseReductionConfig::default();
+//! process_audio(
+//!     Path::new("noisy.wav"),
+//!     Path::new("clean.wav"),
+//!     config,
+//! )?;
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+
 use hound::{WavReader, WavWriter, WavSpec};
 use num_complex::Complex;
 use rustfft::{Fft, FftPlanner};
 use std::f32::consts::PI;
 use std::path::Path;
 
+/// FFT frame size in samples
 pub const FRAME_SIZE: usize = 2048;
 const HOP_SIZE: usize = 1024;
 
+/// Configuration for noise reduction processing
+#[derive(Debug, Clone)]
 pub struct NoiseReductionConfig {
+    /// Number of frames to use for noise profile estimation (default: 10)
     pub noise_frames: usize,
+    /// Spectral floor value 0.0-1.0, higher preserves more signal (default: 0.1)
     pub spectral_floor: f32,
+    /// Over-subtraction factor, higher = more aggressive (default: 2.0)
     pub over_subtraction: f32,
+    /// Output gain multiplier to compensate for volume loss (default: 1.5)
     pub makeup_gain: f32,
 }
 
@@ -25,6 +51,7 @@ impl Default for NoiseReductionConfig {
     }
 }
 
+/// Audio processor for FFT operations
 pub struct AudioProcessor {
     fft: std::sync::Arc<dyn Fft<f32>>,
     ifft: std::sync::Arc<dyn Fft<f32>>,
@@ -120,6 +147,33 @@ fn spectral_subtraction(
     processor.fft_inverse(&mut spectrum)
 }
 
+/// Process audio file with noise reduction
+///
+/// # Arguments
+///
+/// * `input_path` - Path to input WAV file
+/// * `output_path` - Path for output WAV file
+/// * `config` - Processing configuration
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use bg_noise_reduction::{process_audio, NoiseReductionConfig};
+/// use std::path::Path;
+///
+/// let config = NoiseReductionConfig {
+///     noise_frames: 10,
+///     spectral_floor: 0.1,
+///     over_subtraction: 2.0,
+///     makeup_gain: 1.5,
+/// };
+///
+/// process_audio(
+///     Path::new("input.wav"),
+///     Path::new("output.wav"),
+///     config,
+/// ).unwrap();
+/// ```
 pub fn process_audio(
     input_path: &Path,
     output_path: &Path,
