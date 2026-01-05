@@ -33,8 +33,8 @@ const Waveform: React.FC<WaveformProps> = ({ samples, sampleRate, currentTime, o
     const samplesPerPixel = Math.ceil(samples.length / width);
     const centerY = height / 2;
 
-    // Draw waveform
-    ctx.fillStyle = '#475569';
+    // Draw waveform (gray background)
+    ctx.fillStyle = '#374151';
     ctx.beginPath();
     ctx.moveTo(0, centerY);
 
@@ -73,12 +73,12 @@ const Waveform: React.FC<WaveformProps> = ({ samples, sampleRate, currentTime, o
     ctx.closePath();
     ctx.fill();
 
-    // Draw progress
+    // Draw progress (gold overlay)
     const duration = samples.length / sampleRate;
     const progress = currentTime / duration;
     const progressWidth = width * progress;
 
-    ctx.fillStyle = '#6366f1';
+    ctx.fillStyle = '#dbb807';
     ctx.beginPath();
     ctx.moveTo(0, centerY);
 
@@ -130,7 +130,7 @@ const Waveform: React.FC<WaveformProps> = ({ samples, sampleRate, currentTime, o
   };
 
   return (
-    <div className="w-full overflow-hidden rounded-lg bg-slate-900/50 border border-slate-700/50 p-4">
+    <div className="w-full overflow-hidden rounded-lg bg-black/50 border border-gray-800 p-4">
       <canvas
         ref={canvasRef}
         onClick={handleClick}
