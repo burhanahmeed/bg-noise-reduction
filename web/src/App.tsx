@@ -15,13 +15,13 @@ interface AudioMetadata {
 function App() {
   const { isReady, isProcessing, initModule, processAudio, applyPreset } = useNoiseReduction();
   const [file, setFile] = useState<File | null>(null);
+  const [arrayBuffer, setArrayBuffer] = useState<ArrayBuffer | null>(null);
   const [originalSamples, setOriginalSamples] = useState<Float32Array | null>(null);
   const [processedSamples, setProcessedSamples] = useState<Float32Array | null>(null);
   const [sampleRate, setSampleRate] = useState<number>(44100);
   const [metadata, setMetadata] = useState<AudioMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<'light' | 'medium' | 'heavy' | 'extreme' | null>(null);
 
   const config = useRef({
@@ -76,8 +76,10 @@ function App() {
     stopAudio2();
 
     try {
+      // Instant upload - read ArrayBuffer and decode in background
       const buffer = await selectedFile.arrayBuffer();
 
+      setArrayBuffer(buffer);
       setMetadata({
         name: selectedFile.name,
         size: selectedFile.size,
@@ -89,12 +91,11 @@ function App() {
       pausedAtRef.current = 0;
       pausedAtRef2.current = 0;
 
-      setIsLoading(true);
-      decodeAudioInBackground(buffer);
+      // Decode in background using setTimeout to not block UI
+      setTimeout(() => decodeAudioInBackground(buffer), 0);
     } catch (err) {
       setError('Failed to read audio file.');
       console.error(err);
-      setIsLoading(false);
     }
   };
 
@@ -103,39 +104,12 @@ function App() {
 
     try {
       const { samples, sampleRate: sr } = await decodeAudioFromBuffer(buffer, audioContextRef.current);
-
       setSampleRate(sr);
       setOriginalSamples(samples);
       setMetadata(prev => prev ? { ...prev, duration: samples.length / sr } : null);
     } catch (err) {
       setError('Failed to decode audio file.');
       console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Original audio playback
-  const startTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = window.setInterval(() => {
-      if (audioContextRef.current && originalSamples) {
-        const elapsed = audioContextRef.current.currentTime - startTimeRef.current;
-        const current = pausedAtRef.current + elapsed;
-        const duration = originalSamples.length / sampleRate;
-        if (current >= duration) {
-          stopAudio();
-          return;
-        }
-        setCurrentTime(current);
-      }
-    }, 50);
-  };
-
-  const stopTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
     }
   };
 
@@ -188,6 +162,29 @@ function App() {
     } catch (err) {
       console.error('Error playing audio:', err);
       setError('Failed to play audio: ' + (err as Error).message);
+    }
+  };
+
+  const startTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = window.setInterval(() => {
+      if (audioContextRef.current && originalSamples) {
+        const elapsed = audioContextRef.current.currentTime - startTimeRef.current;
+        const current = pausedAtRef.current + elapsed;
+        const duration = originalSamples.length / sampleRate;
+        if (current >= duration) {
+          stopAudio();
+          return;
+        }
+        setCurrentTime(current);
+      }
+    }, 50);
+  };
+
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
   };
 
@@ -467,12 +464,12 @@ function App() {
                 </div>
                 <button
                   onClick={handleProcess}
-                  disabled={isAnalyzing || isLoading}
+                  disabled={isAnalyzing}
                   className={`bg-[#dbb807] hover:bg-[#c9a500] text-black font-semibold px-8 py-3 rounded-lg transition-colors flex items-center gap-2 ${
-                    (isAnalyzing || isLoading) ? 'opacity-50 cursor-not-allowed' : ''
+                    isAnalyzing ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
-                  {isAnalyzing || isLoading ? (
+                  {isAnalyzing ? (
                     <>
                       <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -534,7 +531,7 @@ function App() {
                 <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Before</span>
               </div>
 
-              {originalSamples && !isLoading && (
+              {originalSamples && (
                 <>
                   <Waveform
                     samples={originalSamples}
@@ -553,15 +550,21 @@ function App() {
                 </>
               )}
 
-              {isLoading && (
+              {!originalSamples && arrayBuffer && (
                 <div className="flex items-center justify-center py-12 text-gray-400">
                   <div className="flex items-center gap-3">
                     <svg className="animate-spin h-5 w-5 text-[#dbb807]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Decoding audio...</span>
+                    <span>Loading audio...</span>
                   </div>
+                </div>
+              )}
+
+              {!originalSamples && !arrayBuffer && (
+                <div className="flex items-center justify-center py-12 text-gray-400">
+                  <p className="text-sm">Upload a file to see waveform</p>
                 </div>
               )}
             </div>
@@ -595,7 +598,7 @@ function App() {
                 </>
               )}
 
-              {!processedSamples && !isLoading && (
+              {!processedSamples && (
                 <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                   <svg className="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />

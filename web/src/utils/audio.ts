@@ -82,6 +82,8 @@ function parseWav(arrayBuffer: ArrayBuffer): { samples: Float32Array; sampleRate
   offset += 2;
   const sampleRate = view.getUint32(offset, true);
   offset += 4;
+  // const byteRate = view.getUint32(offset, true);
+  offset += 4;
   const blockAlign = view.getUint16(offset, true);
   offset += 2;
   const bitsPerSample = view.getUint16(offset, true);
