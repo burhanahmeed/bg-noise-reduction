@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "cd ../wasm && wasm-pack build --target web --out-dir ../web/pkg && cd ../web && tsc -b && vite build",
+    "build:wasm": "cd ../wasm && wasm-pack build --target web --out-dir ../web/pkg",
+    "build:web": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -29,6 +31,7 @@
     "tailwindcss": "^4.1.18",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "wasm-pack": "^0.13.0"
   }
 }

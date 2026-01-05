@@ -3,7 +3,7 @@ import './App.css';
 import { useNoiseReduction } from './hooks/useNoiseReduction';
 import Waveform from './components/Waveform';
 import Controls from './components/Controls';
-import { decodeAudio, decodeAudioFromBuffer, samplesToWav, downloadBlob, getAudioDuration } from './utils/audio';
+import { decodeAudioFromBuffer, samplesToWav, downloadBlob, getAudioDuration } from './utils/audio';
 
 interface AudioMetadata {
   name: string;
