@@ -1,0 +1,26 @@
+# Exclude web frontend
+web/
+
+# Exclude audio files
+*.wav
+*.mp3
+*.flac
+
+# Exclude test files
+test_*.py
+tests/
+
+# Exclude documentation
+*.md
+!README.md
+
+# Exclude IDE files
+.vscode/
+.idea/
+
+# Exclude OS files
+.DS_Store
+Thumbs.db
+
+# Exclude root src (not part of workspace crates)
+src/

@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd ../wasm && wasm-pack build --target web --out-dir ../web/pkg && cd ../web && npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm install",
-  "framework": "vite"
-}
