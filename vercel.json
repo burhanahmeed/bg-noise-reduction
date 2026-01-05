@@ -3,7 +3,6 @@
   "outputDirectory": "web/dist",
   "installCommand": "cd web && npm install",
   "framework": "vite",
-  "functions": {},
   "rewrites": [
     {
       "source": "/(.*)",
