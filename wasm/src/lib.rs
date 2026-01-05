@@ -25,6 +25,17 @@ impl NoiseReduction {
         }
     }
 
+    /// Process audio samples with config and return cleaned audio
+    /// This avoids aliasing by setting config and processing in one call
+    #[wasm_bindgen]
+    pub fn process_with_config(&mut self, samples: &[f32], noise_frames: usize, spectral_floor: f32, over_subtraction: f32, makeup_gain: f32) -> Vec<f32> {
+        self.config.noise_frames = noise_frames;
+        self.config.spectral_floor = spectral_floor;
+        self.config.over_subtraction = over_subtraction;
+        self.config.makeup_gain = makeup_gain;
+        self.processor.process(samples, &self.config)
+    }
+
     /// Process audio samples and return cleaned audio
     ///
     /// # Arguments
@@ -80,37 +91,5 @@ impl NoiseReduction {
             self.config.over_subtraction,
             self.config.makeup_gain
         )
-    }
-
-    /// Apply a preset configuration
-    #[wasm_bindgen]
-    pub fn apply_preset(&mut self, preset: &str) {
-        match preset {
-            "light" => {
-                self.config.noise_frames = 10;
-                self.config.spectral_floor = 0.25;
-                self.config.over_subtraction = 1.0;
-                self.config.makeup_gain = 1.2;
-            }
-            "medium" => {
-                self.config.noise_frames = 10;
-                self.config.spectral_floor = 0.1;
-                self.config.over_subtraction = 2.0;
-                self.config.makeup_gain = 1.5;
-            }
-            "heavy" => {
-                self.config.noise_frames = 10;
-                self.config.spectral_floor = 0.05;
-                self.config.over_subtraction = 3.0;
-                self.config.makeup_gain = 1.8;
-            }
-            "extreme" => {
-                self.config.noise_frames = 10;
-                self.config.spectral_floor = 0.02;
-                self.config.over_subtraction = 4.0;
-                self.config.makeup_gain = 2.0;
-            }
-            _ => {}
-        }
     }
 }

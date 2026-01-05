@@ -23,6 +23,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState<'light' | 'medium' | 'heavy' | 'extreme' | null>(null);
 
   const config = useRef({
     noise_frames: 10,
@@ -62,6 +63,7 @@ function App() {
     setFile(selectedFile);
     setProcessedSamples(null);
     setOriginalSamples(null);
+    setSelectedPreset(null);
     stopAudio();
 
     try {
@@ -284,6 +286,7 @@ function App() {
 
   const handlePreset = (preset: 'light' | 'medium' | 'heavy' | 'extreme') => {
     applyPreset(preset);
+    setSelectedPreset(preset);
     // Update local config ref for display purposes
     const presets = {
       light: { noise_frames: 10, spectral_floor: 0.25, over_subtraction: 1.0, makeup_gain: 1.2 },
@@ -456,9 +459,15 @@ function App() {
                     <button
                       key={key}
                       onClick={() => handlePreset(key as any)}
-                      className="p-4 bg-slate-800/50 hover:bg-indigo-600/20 border border-slate-700 hover:border-indigo-500/50 rounded-xl transition-all text-left group"
+                      className={`p-4 rounded-xl transition-all text-left group ${
+                        selectedPreset === key
+                          ? 'bg-indigo-600/30 border-indigo-500 shadow-lg shadow-indigo-500/20'
+                          : 'bg-slate-800/50 hover:bg-indigo-600/20 border border-slate-700 hover:border-indigo-500/50'
+                      } border`}
                     >
-                      <div className="text-sm font-semibold text-slate-300 group-hover:text-indigo-300 mb-1">{label}</div>
+                      <div className={`text-sm font-semibold mb-1 ${
+                        selectedPreset === key ? 'text-indigo-300' : 'text-slate-300 group-hover:text-indigo-300'
+                      }`}>{label}</div>
                       <div className="text-xs text-slate-500">{desc}</div>
                     </button>
                   ))}

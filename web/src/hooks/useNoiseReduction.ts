@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import init, { NoiseReduction } from '../../pkg/bg_noise_reduction_wasm';
 
 export interface NoiseReductionConfig {
@@ -11,12 +11,10 @@ export interface NoiseReductionConfig {
 export function useNoiseReduction() {
   const [isReady, setIsReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const processorRef = useRef<NoiseReduction | null>(null);
 
   const initModule = useCallback(async () => {
     try {
       await init();
-      processorRef.current = new NoiseReduction();
       setIsReady(true);
     } catch (error) {
       console.error('Failed to initialize WASM module:', error);
@@ -26,26 +24,21 @@ export function useNoiseReduction() {
 
   const processAudio = useCallback(
     async (samples: Float32Array, config: NoiseReductionConfig): Promise<Float32Array> => {
-      if (!processorRef.current) {
-        throw new Error('Processor not initialized');
-      }
-
       setIsProcessing(true);
 
       try {
-        // Use set_config to avoid aliasing issues with multiple setters
-        processorRef.current.set_config(
-          config.noise_frames,
-          config.spectral_floor,
-          config.over_subtraction,
-          config.makeup_gain
-        );
-
-        // Run WASM processing in next tick to allow UI to update
+        // Create a new processor for each call to avoid aliasing issues with reused state
         const result = await new Promise<Float32Array>((resolve, reject) => {
           setTimeout(() => {
             try {
-              resolve(processorRef.current!.process(samples));
+              const processor = new NoiseReduction();
+              resolve(processor.process_with_config(
+                samples,
+                config.noise_frames,
+                config.spectral_floor,
+                config.over_subtraction,
+                config.makeup_gain
+              ));
             } catch (e) {
               reject(e);
             }
@@ -56,16 +49,16 @@ export function useNoiseReduction() {
         return result;
       } catch (error) {
         setIsProcessing(false);
+        console.error('Error processing audio:', error);
         throw error;
       }
     },
     []
   );
 
-  const applyPreset = useCallback((preset: 'light' | 'medium' | 'heavy' | 'extreme') => {
-    if (processorRef.current) {
-      processorRef.current.apply_preset(preset);
-    }
+  const applyPreset = useCallback((_preset: 'light' | 'medium' | 'heavy' | 'extreme') => {
+    // Presets are handled in JS - config is applied in processAudio
+    // This is a no-op function to maintain API compatibility
   }, []);
 
   return {
